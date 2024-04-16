@@ -5,67 +5,59 @@ import unittest
 from models.base_model import BaseModel
 import uuid
 from datetime import datetime
-import os
-from models import storage
-
 
 class TestBaseModel(unittest.TestCase):
     """class testing base_model module
     """
-    my_model_1 = BaseModel()
-    x = my_model_1.to_dict()
-    my_model_1.save()
-    y = my_model_1.to_dict()
-    my_model_2 = BaseModel(**x)
-    def test_updated_at(self):
-        """save method modifies updated_at instance attribute
-        thus x and y should not be similar at updated_at values
+     def test_init(self):
         """
-        self.assertNotEqual(TestBaseModel.x['updated_at'], TestBaseModel.y['updated_at'])
-        self.assertEqual(TestBaseModel.x['created_at'], TestBaseModel.y['created_at'])
+        unittest for init method
+        """
+        my_model = BaseModel()
+
+        self.assertIsNotNone(my_model.id)
+        self.assertIsNotNone(my_model.created_at)
+        self.assertIsNotNone(my_model.updated_at)
+
+    def test_save(self):
+        """
+        Unittest for save method
+        """
+        my_model = BaseModel()
+
+        prev_updated_at = my_model.updated_at
+
+        curr_updated_at = my_model.save()
+
+        self.assertNotEqual(prev_updated_at, curr_updated_at)
 
     def test_to_dict(self):
-        """tests if to_dict method returns a dictionary
         """
-        self.assertEqual(type(TestBaseModel.x), dict)
-        self.assertEqual(type(TestBaseModel.y), dict)
+        Unittest for to_dict method
+        """
+        my_model = BaseModel()
 
-    def test_kwargs(self):
-        """tests if kwargs changes created_at and updated_at times
-        from string to datetime
-        """
-        self.assertEqual(type(TestBaseModel.my_model_2.created_at), datetime)
-        self.assertEqual(type(TestBaseModel.my_model_2.updated_at), datetime)
+        my_model_dict = my_model.to_dict()
 
-    def test_if_kwargs_works(self):
-        """tests whether kwargs actually creates an object from scratch
-        """
-        if os.path.isfile("file.json"):
-            os.remove("file.json")
-        dummy_model = BaseModel(**TestBaseModel.y)
-        dummy_model.save()
-        self.assertGreater(len(storage.all()), 0)
+        self.assertIsInstance(my_model_dict, dict)
 
-    def test_if_kwargs_modified_its_parent(self):
-        """tests if kwargs-id and parents-id are similar
-        """
-        dummy = BaseModel(**TestBaseModel.y)
-        self.assertEqual(TestBaseModel.my_model_1.id, dummy.id)
+        self.assertEqual(my_model_dict["__class__"], 'BaseModel')
+        self.assertEqual(my_model_dict['id'], my_model.id)
+        self.assertEqual(my_model_dict['created_at'], my_model.created_at.isoformat())
+        self.assertEqual(my_model_dict["updated_at"], my_model.created_at.isoformat())
 
-    def test_uuid(self):
-        """test if different instances have unique ids
+     def test_str(self):
         """
-        my_model_z = BaseModel()
-        self.assertNotEqual(TestBaseModel.my_model_1.id, my_model_z.id)
+        Unittest for string method
+        """
+        my_model = BaseModel()
 
-    def test_type(self):
-        """tests type of instance attributes
-        """
-        self.assertEqual(type(TestBaseModel.my_model_1.created_at), datetime)
-        self.assertEqual(type(TestBaseModel.my_model_1.updated_at), datetime)
-        self.assertEqual(type(TestBaseModel.my_model_1.id), str)
+        self.assertTrue(str(my_model).startswith('[BaseModel]'))
 
-    def test_instance_type(self):
-        """test instance type
-        """
-        self.assertTrue(isinstance(TestBaseModel.my_model_1, BaseModel))
+        self.assertIn(my_model.id, str(my_model))
+
+        self.assertIn(str(my_model.__dict__), str(my_model))
+
+
+if __name__ == "__main__":
+    unittest.main()
